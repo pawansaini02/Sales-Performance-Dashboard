@@ -136,8 +136,8 @@ export DB_PASS=your_password
 **Pawan Saini**
 BI Analyst | SQL · Power BI · Python · Excel
 
-- LinkedIn: [your-linkedin-url]
-- Email: your@email.com
+- LinkedIn: https://www.linkedin.com/in/pawansaini02
+- Email: pawansaini10101@gmail.com
 
 ---
 
