@@ -1,5 +1,5 @@
 """
-VRT Sales — Sample Data Generator
+Sales — Sample Data Generator
 Run this to create realistic CSV files you can use to demo the dashboard
 without needing a real database.
 Usage: python generate_sample_data.py
