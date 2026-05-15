@@ -1,10 +1,10 @@
-# 📊 VRT Sales Intelligence Dashboard
+# 📊 Sales Performance Dashboard
 
 > A complete Business Intelligence project — interactive dashboard, SQL analytics queries, and automated Excel reporting pipeline.
 
 ![Dashboard Preview](screenshot.png)
 
-**[🔴 Live Demo →](https://your-username.github.io/vrt-sales-dashboard/)**
+**[🔴 Live Demo →](https://pawansaini02.github.io/Sales-Performance-Dashboard/)**
 
 ---
 
