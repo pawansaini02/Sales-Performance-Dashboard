@@ -1,6 +1,6 @@
 """
-VRT Sales Intelligence — Automated Weekly Report Generator
-Author: [Your Name]
+Sales Intelligence — Automated Weekly Report Generator
+Author: Pawan Saini
 Tools: Python 3.x, pandas, openpyxl, mysql-connector-python, smtplib
 Run: python generate_report.py
 Schedule: cron → 0 8 * * MON (every Monday 8 AM)
@@ -146,7 +146,7 @@ def build_report(dfs):
 
     # Title banner
     ws.merge_cells("A1:H1")
-    ws["A1"].value = f"VRT Management Group — Sales Report  |  {TODAY.strftime('%B %d, %Y')}"
+    ws["A1"].value = f"ABC Management Group — Sales Report  |  {TODAY.strftime('%B %d, %Y')}"
     ws["A1"].font  = Font(bold=True, size=16, color=WHITE)
     ws["A1"].fill  = PatternFill("solid", fgColor=DARK)
     ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
@@ -217,7 +217,7 @@ def send_email(filepath):
     msg = MIMEMultipart()
     msg["From"]    = EMAIL_SENDER
     msg["To"]      = ", ".join(EMAIL_TO)
-    msg["Subject"] = f"VRT Weekly Sales Report — {TODAY.strftime('%B %d, %Y')}"
+    msg["Subject"] = f"ABC Weekly Sales Report — {TODAY.strftime('%B %d, %Y')}"
 
     body = f"""
 Hi Team,
@@ -226,13 +226,13 @@ Please find attached the automated Weekly Sales Intelligence Report for {TODAY.s
 
 Key Highlights:
 • Dashboard covers YTD revenue, program mix, regional breakdown, and rep performance.
-• All data pulled live from the VRT Sales DB.
-• Full interactive dashboard: https://your-github-username.github.io/vrt-sales-dashboard/
+• All data pulled live from the ABC Sales DB.
+• Full interactive dashboard: https://your-github-username.github.io/ABC-sales-dashboard/
 
 This report is auto-generated every Monday at 8 AM. Reply to this email for any questions.
 
 Regards,
-[Your Name] | BI Analyst, VRT Management Group
+[Your Name] | BI Analyst, ABC Management Group
 """
     msg.attach(MIMEText(body, "plain"))
 
@@ -252,7 +252,7 @@ Regards,
 
 # ─── MAIN ───────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print(f"\n🚀 VRT Sales Report Generator — {TODAY}\n")
+    print(f"\n🚀 ABC Sales Report Generator — {TODAY}\n")
     dfs  = fetch_data()
     path = build_report(dfs)
     # send_email(path)   # Uncomment after configuring email credentials
