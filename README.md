@@ -133,7 +133,7 @@ export DB_PASS=your_password
 
 ## 👤 Author
 
-**[Your Name]**
+**Pawan Saini**
 BI Analyst | SQL · Power BI · Python · Excel
 
 - LinkedIn: [your-linkedin-url]
