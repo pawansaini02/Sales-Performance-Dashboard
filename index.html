@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VRT Sales Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0c0f14;
+    --surface: #131720;
+    --surface2: #1a2030;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --accent3: #f59e0b;
+    --accent4: #ef4444;
+    --accent5: #8b5cf6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    color: #fff;
+  }
+  .logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .period-tabs { display: flex; background: var(--bg); border-radius: 8px; padding: 3px; gap: 2px; }
+  .period-tab {
+    padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    color: var(--muted); border: none; background: none; font-family: 'Syne', sans-serif;
+    transition: all 0.15s;
+  }
+  .period-tab.active { background: var(--surface2); color: var(--text); }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--accent2); font-family: 'DM Mono', monospace;
+  }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* LAYOUT */
+  .main { padding: 28px 32px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-3-2 { display: grid; grid-template-columns: 1.8fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .card:nth-child(1){animation-delay:0.05s}
+  .card:nth-child(2){animation-delay:0.1s}
+  .card:nth-child(3){animation-delay:0.15s}
+  .card:nth-child(4){animation-delay:0.2s}
+
+  /* KPI CARDS */
+  .kpi-label {
+    font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace;
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .kpi-icon { font-size: 14px; }
+  .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -1px; margin-bottom: 6px; }
+  .kpi-delta {
+    font-size: 12px; font-family: 'DM Mono', monospace;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .kpi-delta.up { color: var(--accent2); }
+  .kpi-delta.down { color: var(--accent4); }
+  .kpi-spark { margin-top: 12px; height: 36px; }
+
+  /* CHART CARDS */
+  .card-title {
+    font-size: 13px; font-weight: 500; margin-bottom: 4px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-sub { font-size: 11px; color: var(--muted); margin-bottom: 18px; font-family: 'DM Mono', monospace; }
+  .chart-wrap { position: relative; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; padding: 8px 12px;
+    font-size: 10px; font-family: 'DM Mono', monospace;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .status-pill {
+    padding: 3px 10px; border-radius: 20px; font-size: 11px;
+    font-family: 'DM Mono', monospace; font-weight: 500;
+  }
+  .status-won { background: rgba(16,185,129,0.15); color: #10b981; }
+  .status-lost { background: rgba(239,68,68,0.12); color: #ef4444; }
+  .status-progress { background: rgba(59,130,246,0.12); color: #60a5fa; }
+
+  /* PROGRESS BAR */
+  .region-row { margin-bottom: 14px; }
+  .region-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+  .region-name { color: var(--text); }
+  .region-val { font-family: 'DM Mono', monospace; color: var(--muted); }
+  .progress-track { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+
+  /* FUNNEL */
+  .funnel-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .funnel-row:last-child { border-bottom: none; }
+  .funnel-stage { font-size: 12px; color: var(--muted); min-width: 80px; font-family: 'DM Mono', monospace; }
+  .funnel-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .funnel-bar { height: 100%; border-radius: 4px; }
+  .funnel-count { font-size: 12px; font-family: 'DM Mono', monospace; min-width: 50px; text-align: right; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex; gap: 10px; margin-bottom: 24px; align-items: center;
+  }
+  .filter-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-right: 4px; }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    color: var(--muted); border: 1px solid var(--border); background: var(--surface);
+    font-family: 'Syne', sans-serif; transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(59,130,246,0.08); }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* FOOTER */
+  .footer {
+    text-align: center; padding: 20px 32px;
+    font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">SI</div>
+    <div>
+      <div class="logo-text">Sales Intelligence</div>
+      <div class="logo-sub">VRT Management Group — FY 2024</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="period-tabs">
+      <button class="period-tab active" onclick="switchPeriod(this,'Q4')">Q4</button>
+      <button class="period-tab" onclick="switchPeriod(this,'Q3')">Q3</button>
+      <button class="period-tab" onclick="switchPeriod(this,'H2')">H2</button>
+      <button class="period-tab" onclick="switchPeriod(this,'FY')">Full Year</button>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div> Live Data</div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <span class="filter-label">Segment:</span>
+    <button class="filter-btn active" onclick="filterSegment(this,'All')">All Clients</button>
+    <button class="filter-btn" onclick="filterSegment(this,'EGA')">EGA Program</button>
+    <button class="filter-btn" onclick="filterSegment(this,'EGOS')">EGOS Program</button>
+    <button class="filter-btn" onclick="filterSegment(this,'Edge')">Entrepreneurial Edge</button>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="grid-4">
+    <div class="card">
+      <div class="kpi-label">Total Revenue <span class="kpi-icon">💰</span></div>
+      <div class="kpi-value" style="color:#3b82f6" id="kpi-rev">$2.84M</div>
+      <div class="kpi-delta up">▲ 18.3% vs last period</div>
+      <div class="kpi-spark"><canvas id="spark1" height="36"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Total Clients <span class="kpi-icon">🏢</span></div>
+      <div class="kpi-value" style="color:#10b981" id="kpi-clients">247</div>
+      <div class="kpi-delta up">▲ 12.4% vs last period</div>
+      <div class="kpi-spark"><canvas id="spark2" height="36"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Avg Deal Size <span class="kpi-icon">📊</span></div>
+      <div class="kpi-value" style="color:#f59e0b" id="kpi-deal">$11.5K</div>
+      <div class="kpi-delta up">▲ 5.2% vs last period</div>
+      <div class="kpi-spark"><canvas id="spark3" height="36"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Win Rate <span class="kpi-icon">🎯</span></div>
+      <div class="kpi-value" style="color:#8b5cf6" id="kpi-win">68.4%</div>
+      <div class="kpi-delta down">▼ 2.1% vs last period</div>
+      <div class="kpi-spark"><canvas id="spark4" height="36"></canvas></div>
+    </div>
+  </div>
+
+  <!-- REVENUE TREND + REGION -->
+  <div class="grid-3-2">
+    <div class="card">
+      <div class="card-title">Monthly Revenue Trend
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Revenue</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#10b981; opacity:0.6"></span>Target</span>
+        </div>
+      </div>
+      <div class="card-sub">Jan – Dec 2024 · USD</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="revChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Revenue by Region</div>
+      <div class="card-sub">Top 5 US markets</div>
+      <div id="region-bars" style="margin-top:8px">
+        <div class="region-row">
+          <div class="region-label"><span class="region-name">New York</span><span class="region-val">$624K</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:88%;background:#3b82f6"></div></div>
+        </div>
+        <div class="region-row">
+          <div class="region-label"><span class="region-name">California</span><span class="region-val">$551K</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:78%;background:#8b5cf6"></div></div>
+        </div>
+        <div class="region-row">
+          <div class="region-label"><span class="region-name">Texas</span><span class="region-val">$488K</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:69%;background:#10b981"></div></div>
+        </div>
+        <div class="region-row">
+          <div class="region-label"><span class="region-name">Florida</span><span class="region-val">$392K</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:55%;background:#f59e0b"></div></div>
+        </div>
+        <div class="region-row">
+          <div class="region-label"><span class="region-name">Illinois</span><span class="region-val">$318K</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:45%;background:#ef4444"></div></div>
+        </div>
+        <div class="region-row">
+          <div class="region-label"><span class="region-name">Others</span><span class="region-val">$467K</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:34%;background:#6b7280"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT MIX + FUNNEL + CATEGORY -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Program Mix</div>
+      <div class="card-sub">Revenue share by program</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="donutChart"></canvas></div>
+      <div class="legend" style="margin-top:14px;justify-content:center">
+        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>EGA 38%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>EGOS 34%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>Edge 28%</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Sales Funnel</div>
+      <div class="card-sub">Pipeline conversion stages</div>
+      <div style="margin-top:8px">
+        <div class="funnel-row">
+          <div class="funnel-stage">Leads</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%;background:#3b82f6"></div></div>
+          <div class="funnel-count">1,240</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-stage">Qualified</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:72%;background:#8b5cf6"></div></div>
+          <div class="funnel-count">893</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-stage">Proposal</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:48%;background:#f59e0b"></div></div>
+          <div class="funnel-count">601</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-stage">Negotiation</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:30%;background:#10b981"></div></div>
+          <div class="funnel-count">374</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-stage">Closed Won</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:19%;background:#22c55e"></div></div>
+          <div class="funnel-count">247</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Monthly Client Acquisition</div>
+      <div class="card-sub">New vs churned clients</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="barChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- DEALS TABLE -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title" style="margin-bottom:4px">Recent Deals</div>
+    <div class="card-sub">Last 10 closed opportunities</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th><th>Program</th><th>Region</th>
+            <th>Deal Value</th><th>Close Date</th><th>Status</th><th>Rep</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Apex Retail LLC</td><td>EGA</td><td>New York</td><td>$18,400</td><td>Dec 14</td><td><span class="status-pill status-won">Won</span></td><td>M. Shah</td></tr>
+          <tr><td>BlueSky Ventures</td><td>EGOS</td><td>California</td><td>$24,200</td><td>Dec 12</td><td><span class="status-pill status-won">Won</span></td><td>P. Rajan</td></tr>
+          <tr><td>Cornerstone Mfg</td><td>Edge</td><td>Texas</td><td>$9,800</td><td>Dec 11</td><td><span class="status-pill status-progress">In Progress</span></td><td>S. Gupta</td></tr>
+          <tr><td>Delta Foods Inc</td><td>EGA</td><td>Florida</td><td>$14,600</td><td>Dec 09</td><td><span class="status-pill status-won">Won</span></td><td>M. Shah</td></tr>
+          <tr><td>Evergreen Spa</td><td>EGOS</td><td>Illinois</td><td>$7,200</td><td>Dec 07</td><td><span class="status-pill status-lost">Lost</span></td><td>P. Rajan</td></tr>
+          <tr><td>Franklin Auto</td><td>Edge</td><td>New York</td><td>$31,000</td><td>Dec 05</td><td><span class="status-pill status-won">Won</span></td><td>A. Patel</td></tr>
+          <tr><td>Greenwood Tech</td><td>EGA</td><td>California</td><td>$19,500</td><td>Dec 03</td><td><span class="status-pill status-won">Won</span></td><td>S. Gupta</td></tr>
+          <tr><td>Harbor Logistics</td><td>EGOS</td><td>Texas</td><td>$11,800</td><td>Nov 29</td><td><span class="status-pill status-progress">In Progress</span></td><td>A. Patel</td></tr>
+          <tr><td>Ironclad Finance</td><td>Edge</td><td>Florida</td><td>$22,400</td><td>Nov 27</td><td><span class="status-pill status-won">Won</span></td><td>M. Shah</td></tr>
+          <tr><td>Jasper Consulting</td><td>EGA</td><td>Illinois</td><td>$8,900</td><td>Nov 25</td><td><span class="status-pill status-lost">Lost</span></td><td>P. Rajan</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  Built by Pawan Saini · Data: Superstore Dataset (Kaggle) · Tools: SQL · Python · Chart.js · Power BI
+</footer>
+
+<script>
+// ─── SPARKLINE HELPER ───────────────────────────────────────────
+function sparkline(id, data, color) {
+  new Chart(document.getElementById(id), {
+    type: 'line',
+    data: {
+      labels: data.map((_,i)=>i),
+      datasets: [{ data, borderColor: color, borderWidth: 2, fill: true,
+        backgroundColor: color.replace('rgb','rgba').replace(')',',0.1)'),
+        tension: 0.4, pointRadius: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } }
+    }
+  });
+}
+sparkline('spark1',[180,220,195,260,240,290,310,280,330,350,380,400,420],'rgb(59,130,246)');
+sparkline('spark2',[80,95,102,110,118,125,130,138,145,155,162,170,175],'rgb(16,185,129)');
+sparkline('spark3',[9,9.5,10,10.2,10.5,10.8,11,11.2,11.3,11.4,11.5,11.5,11.5],'rgb(245,158,11)');
+sparkline('spark4',[72,70,68,71,69,68,70,69,67,68,68,68,68],'rgb(139,92,246)');
+
+// ─── REVENUE TREND ──────────────────────────────────────────────
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const revData = [185,202,195,240,228,265,282,270,310,295,340,388];
+const targetData = [180,195,200,230,225,255,270,280,300,310,320,360];
+
+const revChart = new Chart(document.getElementById('revChart'), {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [
+      { label: 'Revenue', data: revData, borderColor: '#3b82f6', borderWidth: 2.5,
+        backgroundColor: 'rgba(59,130,246,0.08)', fill: true, tension: 0.4, pointRadius: 3,
+        pointBackgroundColor: '#3b82f6', pointBorderColor: '#0c0f14', pointBorderWidth: 2 },
+      { label: 'Target', data: targetData, borderColor: 'rgba(16,185,129,0.5)',
+        borderWidth: 1.5, borderDash: [5,5], fill: false, tension: 0.4, pointRadius: 0 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1a2030', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+        titleColor: '#9ca3af', bodyColor: '#e8eaf0', padding: 10,
+        callbacks: { label: ctx => ' $' + ctx.raw + 'K' }
+      }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { family: 'DM Mono', size: 11 } } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { family: 'DM Mono', size: 11 }, callback: v => '$'+v+'K' } }
+    }
+  }
+});
+
+// ─── DONUT ──────────────────────────────────────────────────────
+new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['EGA', 'EGOS', 'Entrepreneurial Edge'],
+    datasets: [{
+      data: [38, 34, 28],
+      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+      borderWidth: 0, hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1a2030', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+        titleColor: '#9ca3af', bodyColor: '#e8eaf0', padding: 10,
+        callbacks: { label: ctx => ' ' + ctx.raw + '% of revenue' }
+      }
+    }
+  }
+});
+
+// ─── BAR CHART ──────────────────────────────────────────────────
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets: [
+      { label: 'New', data: [28,32,27,35,31,38], backgroundColor: 'rgba(59,130,246,0.7)', borderRadius: 4, borderSkipped: false },
+      { label: 'Churned', data: [-6,-8,-5,-9,-7,-10], backgroundColor: 'rgba(239,68,68,0.5)', borderRadius: 4, borderSkipped: false }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1a2030', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+        titleColor: '#9ca3af', bodyColor: '#e8eaf0', padding: 10
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#6b7280', font: { family: 'DM Mono', size: 11 } } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { family: 'DM Mono', size: 11 } } }
+    }
+  }
+});
+
+// ─── INTERACTIVITY ──────────────────────────────────────────────
+const periodData = {
+  Q4: { rev:'$2.84M', clients:'247', deal:'$11.5K', win:'68.4%',
+        revArr:[295,310,340,388,null,null,null,null,null,null,null,null].filter(x=>x) },
+  Q3: { rev:'$2.41M', clients:'218', deal:'$10.8K', win:'71.2%',
+        revArr:[265,282,270,310,null,null,null,null,null,null,null,null].filter(x=>x) },
+  H2:  { rev:'$5.25M', clients:'247', deal:'$11.1K', win:'69.6%',
+        revArr:[265,282,270,310,295,340,388,null,null,null,null,null].filter(x=>x) },
+  FY:  { rev:'$9.84M', clients:'247', deal:'$11.5K', win:'68.4%', revArr: revData }
+};
+
+function switchPeriod(el, key) {
+  document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const d = periodData[key];
+  document.getElementById('kpi-rev').textContent = d.rev;
+  document.getElementById('kpi-clients').textContent = d.clients;
+  document.getElementById('kpi-deal').textContent = d.deal;
+  document.getElementById('kpi-win').textContent = d.win;
+  const lbls = key==='FY' ? months : months.slice(0, d.revArr.length);
+  revChart.data.labels = lbls;
+  revChart.data.datasets[0].data = d.revArr;
+  revChart.update('active');
+}
+
+function filterSegment(el, seg) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
