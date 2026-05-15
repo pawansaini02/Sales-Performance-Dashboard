@@ -22,7 +22,7 @@ This project simulates a real-world BI Analyst workflow for a US-based consultin
 ## 📁 Project Structure
 
 ```
-vrt-sales-dashboard/
+sales-dashboard/
 │
 ├── index.html                     ← Live dashboard (Chart.js, no framework needed)
 │
@@ -75,8 +75,8 @@ vrt-sales-dashboard/
 ### Option A — Just view the dashboard
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/vrt-sales-dashboard.git
-cd vrt-sales-dashboard
+git clone https://github.com/your-username/sales-dashboard.git
+cd sales-dashboard
 
 # Open in browser — no server needed
 open index.html
@@ -101,7 +101,7 @@ python python/generate_report.py
 1. Set environment variables:
 ```bash
 export DB_HOST=localhost
-export DB_NAME=vrt_sales
+export DB_NAME=sales
 export DB_USER=analyst
 export DB_PASS=your_password
 ```
